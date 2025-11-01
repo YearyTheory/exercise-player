@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practice Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .slider-container {
+            margin-top: 10px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #777;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #764ba2;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s;
+        }
+        
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #764ba2;
+        }
+        
+        .value-display {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .play-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .play-btn:hover {
+            background: #45a049;
+        }
+        
+        .play-btn.playing {
+            background: #ff9800;
+        }
+        
+        .play-btn.playing:hover {
+            background: #fb8c00;
+        }
+        
+        .stop-btn {
+            background: #f44336;
+            color: white;
+        }
+        
+        .stop-btn:hover {
+            background: #da190b;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            button {
+                padding: 14px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Practice Player</h1>
+        
+        <div class="control-group" id="rangeGroup">
+            <label for="range">Range</label>
+            <select id="range">
+                <option value="high">High</option>
+                <option value="low">Low</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="track">Track</label>
+            <select id="track">
+                <option value="">Select a track...</option>
+                <option value="audio/melody-01">Melody 1</option>
+                <option value="audio/melody-02">Melody 2</option>
+                <option value="audio/melody-03">Melody 3</option>
+                <option value="audio/rhythm-01">Rhythm 1</option>
+                <option value="audio/rhythm-02">Rhythm 2</option>
+            </select>
+        </div>
+        
+        <div class="control-group" id="pitchGroup">
+            <label>Pitch</label>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Lower</span>
+                    <span>Higher</span>
+                </div>
+                <input type="range" id="pitch" min="-6" max="6" value="0" step="1">
+                <div class="value-display" id="pitchValue">0 semitones</div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>Tempo</label>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Slower</span>
+                    <span>Faster</span>
+                </div>
+                <input type="range" id="tempo" min="50" max="150" value="100" step="1">
+                <div class="value-display" id="tempoValue">100%</div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="play-btn" id="playBtn">Play</button>
+            <button class="stop-btn" id="stopBtn">Stop</button>
+        </div>
+        
+        <div class="loading hidden" id="loading">Loading track...</div>
+    </div>
+
+    <script>
+        // Audio context and variables
+        let audioContext;
+        let audioBuffer;
+        let sourceNode;
+        let isPlaying = false;
+        let startTime = 0;
+        let pauseTime = 0;
+        
+        // DOM elements
+        const rangeSelect = document.getElementById('range');
+        const trackSelect = document.getElementById('track');
+        const pitchSlider = document.getElementById('pitch');
+        const tempoSlider = document.getElementById('tempo');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const pitchValue = document.getElementById('pitchValue');
+        const tempoValue = document.getElementById('tempoValue');
+        const rangeGroup = document.getElementById('rangeGroup');
+        const pitchGroup = document.getElementById('pitchGroup');
+        const loading = document.getElementById('loading');
+        
+        // Initialize audio context on first user interaction
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        // Update UI based on track type
+        function updateUIForTrackType() {
+            const selectedTrack = trackSelect.value;
+            const isRhythm = selectedTrack.startsWith('rhythm-');
+            
+            if (isRhythm) {
+                rangeGroup.classList.add('hidden');
+                pitchGroup.classList.add('hidden');
+            } else {
+                rangeGroup.classList.remove('hidden');
+                pitchGroup.classList.remove('hidden');
+            }
+        }
+        
+        // Load audio file
+        async function loadAudio() {
+            const selectedTrack = trackSelect.value;
+            if (!selectedTrack) return;
+            
+            initAudioContext();
+            
+            const isRhythm = selectedTrack.startsWith('rhythm-');
+            let filename;
+            
+            if (isRhythm) {
+                filename = `audio/${selectedTrack}.mp3`;
+            } else {
+                const range = rangeSelect.value;
+                filename = `audio/${selectedTrack}-${range}.mp3`;
+            }
+            
+            try {
+                loading.classList.remove('hidden');
+                const response = await fetch(filename);
+                const arrayBuffer = await response.arrayBuffer();
+                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                loading.classList.add('hidden');
+            } catch (error) {
+                loading.classList.add('hidden');
+                alert('Could not load audio file. Make sure the file exists: ' + filename);
+                console.error('Error loading audio:', error);
+            }
+        }
+        
+        // Play audio with current settings
+        function play() {
+            if (!audioBuffer) {
+                alert('Please select a track first!');
+                return;
+            }
+            
+            if (isPlaying) {
+                pause();
+                return;
+            }
+            
+            initAudioContext();
+            
+            // Create source node
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            
+            // Apply tempo (playback rate)
+            const tempoRate = tempoSlider.value / 100;
+            sourceNode.playbackRate.value = tempoRate;
+            
+            // Apply pitch shift (detune in cents, 100 cents = 1 semitone)
+            const pitchShift = pitchSlider.value * 100;
+            sourceNode.detune.value = pitchShift;
+            
+            // Connect to output
+            sourceNode.connect(audioContext.destination);
+            
+            // Handle end of playback
+            sourceNode.onended = () => {
+                if (isPlaying) {
+                    stop();
+                }
+            };
+            
+            // Start playback
+            const offset = pauseTime;
+            sourceNode.start(0, offset);
+            startTime = audioContext.currentTime - offset;
+            isPlaying = true;
+            
+            playBtn.textContent = 'Pause';
+            playBtn.classList.add('playing');
+        }
+        
+        // Pause playback
+        function pause() {
+            if (sourceNode && isPlaying) {
+                const elapsed = audioContext.currentTime - startTime;
+                pauseTime = elapsed;
+                sourceNode.stop();
+                sourceNode = null;
+                isPlaying = false;
+                
+                playBtn.textContent = 'Play';
+                playBtn.classList.remove('playing');
+            }
+        }
+        
+        // Stop playback
+        function stop() {
+            if (sourceNode) {
+                sourceNode.stop();
+                sourceNode = null;
+            }
+            isPlaying = false;
+            pauseTime = 0;
+            startTime = 0;
+            
+            playBtn.textContent = 'Play';
+            playBtn.classList.remove('playing');
+        }
+        
+        // Event listeners
+        trackSelect.addEventListener('change', () => {
+            stop();
+            updateUIForTrackType();
+            if (trackSelect.value) {
+                loadAudio();
+            }
+        });
+        
+        rangeSelect.addEventListener('change', () => {
+            stop();
+            if (trackSelect.value) {
+                loadAudio();
+            }
+        });
+        
+        pitchSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            const semitones = value === '0' ? '0' : (value > 0 ? '+' + value : value);
+            pitchValue.textContent = `${semitones} semitone${Math.abs(value) === 1 ? '' : 's'}`;
+            
+            // Apply pitch change in real-time if playing
+            if (isPlaying && sourceNode) {
+                sourceNode.detune.value = value * 100;
+            }
+        });
+        
+        tempoSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            tempoValue.textContent = `${value}%`;
+            
+            // Apply tempo change in real-time if playing
+            if (isPlaying && sourceNode) {
+                sourceNode.playbackRate.value = value / 100;
+            }
+        });
+        
+        playBtn.addEventListener('click', play);
+        stopBtn.addEventListener('click', stop);
+        
+        // Initialize UI
+        updateUIForTrackType();
+    </script>
+</body>
+</html>

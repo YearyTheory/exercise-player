@@ -389,8 +389,13 @@
             try {
                 loading.classList.remove('hidden');
                 stop(); // Stop current playback if any
-                await player.load(filename);
+                
+                // Load buffer into GrainPlayer
+                const buffer = await Tone.Buffer.fromUrl(filename);
+                player.buffer = buffer;
+                
                 currentTrackUrl = filename;
+                loading.classList.add('hidden');
                 
                 // Show description from tracks data
                 showDescription(selectedTrack);

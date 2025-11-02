@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practice Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .slider-container {
+            margin-top: 10px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #777;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #764ba2;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s;
+        }
+        
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #764ba2;
+        }
+        
+        .value-display {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .play-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .play-btn:hover {
+            background: #45a049;
+        }
+        
+        .play-btn.playing {
+            background: #ff9800;
+        }
+        
+        .play-btn.playing:hover {
+            background: #fb8c00;
+        }
+        
+        .stop-btn {
+            background: #f44336;
+            color: white;
+        }
+        
+        .stop-btn:hover {
+            background: #da190b;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            margin-top: 20px;
+        }
+        
+        .track-description {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            button {
+                padding: 14px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Practice Player</h1>
+        
+        <div class="control-group" id="rangeGroup">
+            <label for="range">Range</label>
+            <select id="range">
+                <option value="high">High</option>
+                <option value="low">Low</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="track">Track</label>
+            <select id="track">
+                <option value="">Select a track...</option>
+            </select>
+            <div class="track-description hidden" id="trackDescription"></div>
+        </div>
+        
+        <div class="control-group" id="pitchGroup">
+            <label>Pitch</label>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Lower</span>
+                    <span>Higher</span>
+                </div>
+                <input type="range" id="pitch" min="-3" max="3" value="0" step="1">
+                <div class="value-display" id="pitchValue">0 semitones</div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>Tempo</label>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Slower</span>
+                    <span>Normal</span>
+                </div>
+                <input type="range" id="tempo" min="50" max="100" value="100" step="2">
+                <div class="value-display" id="tempoValue">100%</div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="play-btn" id="playBtn">Play</button>
+            <button class="stop-btn" id="stopBtn">Stop</button>
+        </div>
+        
+        <div class="loading hidden" id="loading">Loading track...</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script>
+        // Tone.js player and variables
+        let player;
+        let pitchShift;
+        let isPlaying = false;
+        let currentTrackUrl = null;
+        let tracksData = [];
+        
+        // DOM elements
+        const rangeSelect = document.getElementById('range');
+        const trackSelect = document.getElementById('track');
+        const pitchSlider = document.getElementById('pitch');
+        const tempoSlider = document.getElementById('tempo');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const pitchValue = document.getElementById('pitchValue');
+        const tempoValue = document.getElementById('tempoValue');
+        const rangeGroup = document.getElementById('rangeGroup');
+        const pitchGroup = document.getElementById('pitchGroup');
+        const loading = document.getElementById('loading');
+        const trackDescription = document.getElementById('trackDescription');
+        
+        // Initialize Tone.js components
+        async function initializeTone() {
+            await Tone.start();
+            
+            // Create pitch shifter
+            pitchShift = new Tone.PitchShift({
+                pitch: 0
+            }).toDestination();
+            
+            // Create player with grain engine for time-stretching
+            player = new Tone.GrainPlayer({
+                onload: () => {
+                    loading.classList.add('hidden');
+                },
+                onerror: (error) => {
+                    loading.classList.add('hidden');
+                    alert('Could not load audio file. Make sure the file exists.');
+                    console.error('Error loading audio:', error);
+                },
+                overlap: 0.1,
+                grainSize: 0.1
+            }).connect(pitchShift);
+            
+            // Handle end of playback
+            player.onstop = () => {
+                if (isPlaying) {
+                    isPlaying = false;
+                    playBtn.textContent = 'Play';
+                    playBtn.classList.remove('playing');
+                }
+            };
+        }
+        
+        // Load tracks data from JSON file
+        async function loadTracksData() {
+            try {
+                const response = await fetch('audio/tracks.json');
+                tracksData = await response.json();
+                populateTrackDropdown();
+            } catch (error) {
+                console.error('Error loading tracks.json:', error);
+                alert('Could not load tracks list. Make sure audio/tracks.json exists.');
+            }
+        }
+        
+        // Populate track dropdown from loaded data
+        function populateTrackDropdown() {
+            // Clear existing options except the first one
+            trackSelect.innerHTML = '<option value="">Select a track...</option>';
+            
+            // Add options from tracks data
+            tracksData.forEach(track => {
+                const option = document.createElement('option');
+                option.value = track.id;
+                option.textContent = track.name;
+                trackSelect.appendChild(option);
+            });
+        }
+        
+        // Get track data by id
+        function getTrackData(trackId) {
+            return tracksData.find(track => track.id === trackId);
+        }
+        
+        // Update UI based on track type
+        function updateUIForTrackType() {
+            const selectedTrack = trackSelect.value;
+            const isRhythm = selectedTrack.startsWith('rhythm-');
+            
+            if (isRhythm) {
+                rangeGroup.classList.add('hidden');
+                pitchGroup.classList.add('hidden');
+            } else {
+                rangeGroup.classList.remove('hidden');
+                pitchGroup.classList.remove('hidden');
+            }
+        }
+        
+        // Load audio file
+        async function loadAudio() {
+            const selectedTrack = trackSelect.value;
+            if (!selectedTrack) return;
+            
+            if (!player) {
+                await initializeTone();
+            }
+            
+            const isRhythm = selectedTrack.startsWith('rhythm-');
+            let filename;
+            
+            if (isRhythm) {
+                filename = `audio/${selectedTrack}.mp3`;
+            } else {
+                const range = rangeSelect.value;
+                filename = `audio/${selectedTrack}-${range}.mp3`;
+            }
+            
+            // Only reload if it's a different file
+            if (filename === currentTrackUrl) return;
+            
+            try {
+                loading.classList.remove('hidden');
+                stop(); // Stop current playback if any
+                await player.load(filename);
+                currentTrackUrl = filename;
+                
+                // Show description from tracks data
+                showDescription(selectedTrack);
+            } catch (error) {
+                loading.classList.add('hidden');
+                alert('Could not load audio file. Make sure the file exists: ' + filename);
+                console.error('Error loading audio:', error);
+            }
+        }
+        
+        // Show track description
+        function showDescription(trackId) {
+            const trackData = getTrackData(trackId);
+            if (trackData && trackData.description) {
+                trackDescription.textContent = trackData.description;
+                trackDescription.classList.remove('hidden');
+            } else {
+                trackDescription.classList.add('hidden');
+            }
+        }
+        
+        // Play audio with current settings
+        async function play() {
+            if (!player || !player.loaded) {
+                alert('Please select a track first!');
+                return;
+            }
+            
+            if (isPlaying) {
+                pause();
+                return;
+            }
+            
+            await Tone.start();
+            
+            // Apply current settings
+            updatePlaybackRate();
+            updatePitchShift();
+            
+            player.start();
+            isPlaying = true;
+            
+            playBtn.textContent = 'Pause';
+            playBtn.classList.add('playing');
+        }
+        
+        // Pause playback
+        function pause() {
+            if (player && isPlaying) {
+                player.stop();
+                isPlaying = false;
+                
+                playBtn.textContent = 'Play';
+                playBtn.classList.remove('playing');
+            }
+        }
+        
+        // Stop playback
+        function stop() {
+            if (player) {
+                player.stop();
+                // GrainPlayer doesn't have seek, we'll need to reload on next play
+            }
+            isPlaying = false;
+            
+            playBtn.textContent = 'Play';
+            playBtn.classList.remove('playing');
+        }
+        
+        // Update playback rate (tempo)
+        function updatePlaybackRate() {
+            if (player) {
+                const rate = tempoSlider.value / 100;
+                player.playbackRate = rate;
+            }
+        }
+        
+        // Update pitch shift
+        function updatePitchShift() {
+            if (pitchShift) {
+                const pitch = parseInt(pitchSlider.value);
+                pitchShift.pitch = pitch;
+            }
+        }
+        
+        // Event listeners
+        trackSelect.addEventListener('change', () => {
+            updateUIForTrackType();
+            if (trackSelect.value) {
+                loadAudio();
+            }
+        });
+        
+        rangeSelect.addEventListener('change', () => {
+            if (trackSelect.value) {
+                loadAudio();
+            }
+        });
+        
+        pitchSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            const semitones = value === '0' ? '0' : (value > 0 ? '+' + value : value);
+            pitchValue.textContent = `${semitones} semitone${Math.abs(value) === 1 ? '' : 's'}`;
+            updatePitchShift();
+        });
+        
+        tempoSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            tempoValue.textContent = `${value}%`;
+            updatePlaybackRate();
+        });
+        
+        playBtn.addEventListener('click', play);
+        stopBtn.addEventListener('click', stop);
+        
+        // Initialize UI and load tracks
+        updateUIForTrackType();
+        loadTracksData();
+    </script>
+</body>
+</html>

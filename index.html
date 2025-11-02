@@ -185,6 +185,16 @@
             margin-top: 20px;
         }
         
+        .track-description {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
         @media (max-width: 480px) {
             .container {
                 padding: 20px;
@@ -217,12 +227,8 @@
             <label for="track">Track</label>
             <select id="track">
                 <option value="">Select a track...</option>
-                <option value="melody-01">Melody 1</option>
-                <option value="melody-02">Melody 2</option>
-                <option value="melody-03">Melody 3</option>
-                <option value="rhythm-01">Rhythm 1</option>
-                <option value="rhythm-02">Rhythm 2</option>
             </select>
+            <div class="track-description hidden" id="trackDescription"></div>
         </div>
         
         <div class="control-group" id="pitchGroup">
@@ -264,6 +270,7 @@
         let pitchShift;
         let isPlaying = false;
         let currentTrackUrl = null;
+        let tracksData = [];
         
         // DOM elements
         const rangeSelect = document.getElementById('range');
@@ -277,6 +284,7 @@
         const rangeGroup = document.getElementById('rangeGroup');
         const pitchGroup = document.getElementById('pitchGroup');
         const loading = document.getElementById('loading');
+        const trackDescription = document.getElementById('trackDescription');
         
         // Initialize Tone.js components
         async function initializeTone() {
@@ -307,6 +315,37 @@
                     playBtn.classList.remove('playing');
                 }
             };
+        }
+        
+        // Load tracks data from JSON file
+        async function loadTracksData() {
+            try {
+                const response = await fetch('audio/tracks.json');
+                tracksData = await response.json();
+                populateTrackDropdown();
+            } catch (error) {
+                console.error('Error loading tracks.json:', error);
+                alert('Could not load tracks list. Make sure audio/tracks.json exists.');
+            }
+        }
+        
+        // Populate track dropdown from loaded data
+        function populateTrackDropdown() {
+            // Clear existing options except the first one
+            trackSelect.innerHTML = '<option value="">Select a track...</option>';
+            
+            // Add options from tracks data
+            tracksData.forEach(track => {
+                const option = document.createElement('option');
+                option.value = track.id;
+                option.textContent = track.name;
+                trackSelect.appendChild(option);
+            });
+        }
+        
+        // Get track data by id
+        function getTrackData(trackId) {
+            return tracksData.find(track => track.id === trackId);
         }
         
         // Update UI based on track type
@@ -350,10 +389,24 @@
                 stop(); // Stop current playback if any
                 await player.load(filename);
                 currentTrackUrl = filename;
+                
+                // Show description from tracks data
+                showDescription(selectedTrack);
             } catch (error) {
                 loading.classList.add('hidden');
                 alert('Could not load audio file. Make sure the file exists: ' + filename);
                 console.error('Error loading audio:', error);
+            }
+        }
+        
+        // Show track description
+        function showDescription(trackId) {
+            const trackData = getTrackData(trackId);
+            if (trackData && trackData.description) {
+                trackDescription.textContent = trackData.description;
+                trackDescription.classList.remove('hidden');
+            } else {
+                trackDescription.classList.add('hidden');
             }
         }
         
@@ -451,8 +504,9 @@
         playBtn.addEventListener('click', play);
         stopBtn.addEventListener('click', stop);
         
-        // Initialize UI
+        // Initialize UI and load tracks
         updateUIForTrackType();
+        loadTracksData();
     </script>
 </body>
 </html>

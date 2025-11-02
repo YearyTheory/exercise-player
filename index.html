@@ -257,14 +257,13 @@
         <div class="loading hidden" id="loading">Loading track...</div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script>
-        // Audio context and variables
-        let audioContext;
-        let audioBuffer;
-        let sourceNode;
+        // Tone.js player and variables
+        let player;
+        let pitchShift;
         let isPlaying = false;
-        let startTime = 0;
-        let pauseTime = 0;
+        let currentTrackUrl = null;
         
         // DOM elements
         const rangeSelect = document.getElementById('range');
@@ -279,11 +278,35 @@
         const pitchGroup = document.getElementById('pitchGroup');
         const loading = document.getElementById('loading');
         
-        // Initialize audio context on first user interaction
-        function initAudioContext() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
+        // Initialize Tone.js components
+        async function initializeTone() {
+            await Tone.start();
+            
+            // Create pitch shifter
+            pitchShift = new Tone.PitchShift({
+                pitch: 0
+            }).toDestination();
+            
+            // Create player
+            player = new Tone.Player({
+                onload: () => {
+                    loading.classList.add('hidden');
+                },
+                onerror: (error) => {
+                    loading.classList.add('hidden');
+                    alert('Could not load audio file. Make sure the file exists.');
+                    console.error('Error loading audio:', error);
+                }
+            }).connect(pitchShift);
+            
+            // Handle end of playback
+            player.onstop = () => {
+                if (isPlaying) {
+                    isPlaying = false;
+                    playBtn.textContent = 'Play';
+                    playBtn.classList.remove('playing');
+                }
+            };
         }
         
         // Update UI based on track type
@@ -305,7 +328,9 @@
             const selectedTrack = trackSelect.value;
             if (!selectedTrack) return;
             
-            initAudioContext();
+            if (!player) {
+                await initializeTone();
+            }
             
             const isRhythm = selectedTrack.startsWith('rhythm-');
             let filename;
@@ -317,12 +342,14 @@
                 filename = `audio/${selectedTrack}-${range}.mp3`;
             }
             
+            // Only reload if it's a different file
+            if (filename === currentTrackUrl) return;
+            
             try {
                 loading.classList.remove('hidden');
-                const response = await fetch(filename);
-                const arrayBuffer = await response.arrayBuffer();
-                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                loading.classList.add('hidden');
+                stop(); // Stop current playback if any
+                await player.load(filename);
+                currentTrackUrl = filename;
             } catch (error) {
                 loading.classList.add('hidden');
                 alert('Could not load audio file. Make sure the file exists: ' + filename);
@@ -331,8 +358,8 @@
         }
         
         // Play audio with current settings
-        function play() {
-            if (!audioBuffer) {
+        async function play() {
+            if (!player || !player.loaded) {
                 alert('Please select a track first!');
                 return;
             }
@@ -342,34 +369,13 @@
                 return;
             }
             
-            initAudioContext();
+            await Tone.start();
             
-            // Create source node
-            sourceNode = audioContext.createBufferSource();
-            sourceNode.buffer = audioBuffer;
+            // Apply current settings
+            updatePlaybackRate();
+            updatePitchShift();
             
-            // Apply tempo (playback rate)
-            const tempoRate = tempoSlider.value / 100;
-            sourceNode.playbackRate.value = tempoRate;
-            
-            // Apply pitch shift (detune in cents, 100 cents = 1 semitone)
-            const pitchShift = pitchSlider.value * 100;
-            sourceNode.detune.value = pitchShift;
-            
-            // Connect to output
-            sourceNode.connect(audioContext.destination);
-            
-            // Handle end of playback
-            sourceNode.onended = () => {
-                if (isPlaying) {
-                    stop();
-                }
-            };
-            
-            // Start playback
-            const offset = pauseTime;
-            sourceNode.start(0, offset);
-            startTime = audioContext.currentTime - offset;
+            player.start();
             isPlaying = true;
             
             playBtn.textContent = 'Pause';
@@ -378,11 +384,8 @@
         
         // Pause playback
         function pause() {
-            if (sourceNode && isPlaying) {
-                const elapsed = audioContext.currentTime - startTime;
-                pauseTime = elapsed;
-                sourceNode.stop();
-                sourceNode = null;
+            if (player && isPlaying) {
+                player.stop();
                 isPlaying = false;
                 
                 playBtn.textContent = 'Play';
@@ -392,21 +395,34 @@
         
         // Stop playback
         function stop() {
-            if (sourceNode) {
-                sourceNode.stop();
-                sourceNode = null;
+            if (player) {
+                player.stop();
+                player.seek(0);
             }
             isPlaying = false;
-            pauseTime = 0;
-            startTime = 0;
             
             playBtn.textContent = 'Play';
             playBtn.classList.remove('playing');
         }
         
+        // Update playback rate (tempo)
+        function updatePlaybackRate() {
+            if (player) {
+                const rate = tempoSlider.value / 100;
+                player.playbackRate = rate;
+            }
+        }
+        
+        // Update pitch shift
+        function updatePitchShift() {
+            if (pitchShift) {
+                const pitch = parseInt(pitchSlider.value);
+                pitchShift.pitch = pitch;
+            }
+        }
+        
         // Event listeners
         trackSelect.addEventListener('change', () => {
-            stop();
             updateUIForTrackType();
             if (trackSelect.value) {
                 loadAudio();
@@ -414,7 +430,6 @@
         });
         
         rangeSelect.addEventListener('change', () => {
-            stop();
             if (trackSelect.value) {
                 loadAudio();
             }
@@ -424,21 +439,13 @@
             const value = e.target.value;
             const semitones = value === '0' ? '0' : (value > 0 ? '+' + value : value);
             pitchValue.textContent = `${semitones} semitone${Math.abs(value) === 1 ? '' : 's'}`;
-            
-            // Apply pitch change in real-time if playing
-            if (isPlaying && sourceNode) {
-                sourceNode.detune.value = value * 100;
-            }
+            updatePitchShift();
         });
         
         tempoSlider.addEventListener('input', (e) => {
             const value = e.target.value;
             tempoValue.textContent = `${value}%`;
-            
-            // Apply tempo change in real-time if playing
-            if (isPlaying && sourceNode) {
-                sourceNode.playbackRate.value = value / 100;
-            }
+            updatePlaybackRate();
         });
         
         playBtn.addEventListener('click', play);

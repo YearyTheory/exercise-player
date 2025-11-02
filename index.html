@@ -213,7 +213,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎵 Exercise Player</h1>
+        <h1>🎵 Practice Player</h1>
         
         <div class="control-group" id="rangeGroup">
             <label for="range">Range</label>
@@ -452,7 +452,7 @@
         function stop() {
             if (player) {
                 player.stop();
-                player.seek(0);
+                // GrainPlayer doesn't have seek, we'll need to reload on next play
             }
             isPlaying = false;
             

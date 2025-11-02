@@ -295,8 +295,8 @@
                 pitch: 0
             }).toDestination();
             
-            // Create player
-            player = new Tone.Player({
+            // Create player with grain engine for time-stretching
+            player = new Tone.GrainPlayer({
                 onload: () => {
                     loading.classList.add('hidden');
                 },
@@ -304,7 +304,9 @@
                     loading.classList.add('hidden');
                     alert('Could not load audio file. Make sure the file exists.');
                     console.error('Error loading audio:', error);
-                }
+                },
+                overlap: 0.1,
+                grainSize: 0.1
             }).connect(pitchShift);
             
             // Handle end of playback

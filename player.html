@@ -37,6 +37,28 @@
             font-size: 28px;
         }
         
+        .header {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .home-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #f5f5f5;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .home-btn:hover {
+            background: #e0e0e0;
+        }
+        
         .control-group {
             margin-bottom: 25px;
         }
@@ -213,7 +235,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎵 Practice Player</h1>
+        <div class="header">
+            <a href="index.html" class="home-btn">← Home</a>
+            <h1>🎵 Practice Player</h1>
+        </div>
         
         <div class="control-group" id="rangeGroup">
             <label for="range">Range</label>

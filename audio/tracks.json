@@ -3,25 +3,30 @@
     "id": "melody-01",
     "name": "Melody 1",
     "description": "DO RE MI, no leaps, key of F"
+    "bpm": 70
   },
   {
     "id": "melody-02",
     "name": "Melody 2",
     "description": "Major scale, ascending and descending"
+    "bpm": 80
   },
   {
     "id": "melody-03",
     "name": "Melody 3",
     "description": "Hexatonic mayhem!!!"
+    "bpm": 90
   },
   {
     "id": "rhythm-01",
     "name": "Rhythm 1",
     "description": "Quarter notes and eighth notes, 4/4 time"
+    "bpm": 100
   },
   {
     "id": "rhythm-02",
     "name": "Rhythm 1",
     "description": "Lots of syncopation"
+    "bpm": 110
   }
 ]

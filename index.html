@@ -271,6 +271,7 @@
         let isPlaying = false;
         let currentTrackUrl = null;
         let tracksData = [];
+        let currentBaseBPM = 120; // default
         
         // DOM elements
         const rangeSelect = document.getElementById('range');
@@ -394,6 +395,9 @@
                 
                 // Show description from tracks data
                 showDescription(selectedTrack);
+                
+                // Update tempo slider for this track's BPM
+                updateTempoSliderForTrack(selectedTrack);
             } catch (error) {
                 loading.classList.add('hidden');
                 alert('Could not load audio file. Make sure the file exists: ' + filename);
@@ -410,6 +414,29 @@
             } else {
                 trackDescription.classList.add('hidden');
             }
+        }
+        
+        // Update tempo slider range based on track's BPM
+        function updateTempoSliderForTrack(trackId) {
+            const trackData = getTrackData(trackId);
+            if (trackData && trackData.bpm) {
+                currentBaseBPM = trackData.bpm;
+            } else {
+                currentBaseBPM = 120; // default if no BPM specified
+            }
+            
+            // Calculate range: 2/3 to 3/2 of base BPM
+            const minBPM = Math.round(currentBaseBPM * 2 / 3);
+            const maxBPM = Math.round(currentBaseBPM * 3 / 2);
+            
+            // Update slider
+            tempoSlider.min = minBPM;
+            tempoSlider.max = maxBPM;
+            tempoSlider.value = currentBaseBPM;
+            tempoSlider.step = 1;
+            
+            // Update display
+            tempoValue.textContent = `${currentBaseBPM} BPM`;
         }
         
         // Play audio with current settings
@@ -463,7 +490,8 @@
         // Update playback rate (tempo)
         function updatePlaybackRate() {
             if (player) {
-                const rate = tempoSlider.value / 100;
+                const currentBPM = parseInt(tempoSlider.value);
+                const rate = currentBPM / currentBaseBPM;
                 player.playbackRate = rate;
             }
         }
@@ -498,8 +526,8 @@
         });
         
         tempoSlider.addEventListener('input', (e) => {
-            const value = e.target.value;
-            tempoValue.textContent = `${value}%`;
+            const bpm = e.target.value;
+            tempoValue.textContent = `${bpm} BPM`;
             updatePlaybackRate();
         });
         
